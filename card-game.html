@@ -127,8 +127,13 @@
     .dice {
       width: 54px;
       height: 54px;
-      background-image: url('dice.jpeg');
-      background-size: cover;
+      background-color: #ffafd2;
+      font-size: 1.8rem;
+      color: #7b1fa2;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .intro-frame {
@@ -216,6 +221,7 @@
       shuffleTiles();
       createBoard();
       updatePegs();
+      document.querySelector(".dice").textContent = ""; // reset dice display
       document.getElementById("info").textContent = `Player 1's turn! 🎲`;
     }
 
@@ -268,6 +274,8 @@
     function rollDice() {
       if (pegPositions[currentPlayer] >= totalTiles - 1) return;
       const roll = Math.floor(Math.random() * 6) + 1;
+      document.querySelector(".dice").textContent = roll; // show big dice number
+
       let message = `Player ${currentPlayer + 1} rolled a ${roll}.`;
       const start = pegPositions[currentPlayer];
       let end = start + roll;
