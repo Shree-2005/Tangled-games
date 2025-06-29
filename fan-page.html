@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tangled Fan Page</title>
+  <link href="https://fonts.googleapis.com/css2?family=Princess+Sofia&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Princess Sofia', cursive;
+      background: linear-gradient(to right, #ffe0f0, #f9d5ec);
+      padding: 30px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.5rem;
+      color: #8e44ad;
+      margin-bottom: 20px;
+    }
+    input, textarea, button {
+      font-family: 'Princess Sofia', cursive;
+      width: 80%;
+      max-width: 400px;
+      margin: 10px auto;
+      padding: 10px;
+      border: 2px solid #b38cd9;
+      border-radius: 10px;
+      display: block;
+    }
+    button {
+      background-color: #ffafd2;
+      color: #fff;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #c67ac9;
+    }
+    .post {
+      background-color: #fff0fb;
+      margin: 10px auto;
+      padding: 15px;
+      border: 1px solid #d9a8f0;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 500px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>💜 Tangled Fan Page 💜</h1>
+  <input type="text" id="name" placeholder="Your Name" />
+  <textarea id="message" rows="4" placeholder="Your Message or Memory..."></textarea>
+  <button onclick="submitPost()">Submit</button>
+  <div id="confirmation"></div>
+  <hr />
+  <h2>📜 Shared by Fans</h2>
+  <div id="posts"></div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyC8yWRxMVTw0Ayv6JlTSFHKLO4M4B5VRyc",
+      authDomain: "tangledfanpage.firebaseapp.com",
+      projectId: "tangledfanpage",
+      storageBucket: "tangledfanpage.firebasestorage.app",
+      messagingSenderId: "438643065940",
+      appId: "1:438643065940:web:a8230ff15f9b842c1499c1",
+      measurementId: "G-75E2B5GSPK"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function submitPost() {
+      const name = document.getElementById('name').value.trim();
+      const message = document.getElementById('message').value.trim();
+      if (!name || !message) return alert("Please fill out both fields");
+
+      db.collection("fanPosts").add({
+        name,
+        message,
+        timestamp: new Date()
+      }).then(() => {
+        document.getElementById('confirmation').textContent = "🎉 Your message is submitted!";
+        document.getElementById('name').value = "";
+        document.getElementById('message').value = "";
+        fetchPosts();
+      }).catch(err => {
+        console.error("Error adding post:", err);
+        alert("❌ Failed to submit your message.");
+      });
+    }
+
+    function fetchPosts() {
+      db.collection("fanPosts").orderBy("timestamp", "desc").get().then(snapshot => {
+        const posts = document.getElementById('posts');
+        posts.innerHTML = "";
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const div = document.createElement("div");
+          div.className = "post";
+          div.innerHTML = `<strong>${data.name}</strong><br>${data.message}`;
+          posts.appendChild(div);
+        });
+      }).catch(err => {
+        console.error("Error fetching posts:", err);
+      });
+    }
+
+    window.onload = fetchPosts;
+  </script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Game | Tangled World</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(#d0f4de, #fef6e4);
+      font-family: 'Quicksand', sans-serif;
+      color: #4b0082;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(4, 80px);
+      gap: 15px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+    .card {
+      width: 80px;
+      height: 80px;
+      background-color: #fff0f5;
+      border: 2px solid #dda0dd;
+      border-radius: 10px;
+      font-size: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.3s;
+    }
+    .card.flipped, .card.matched {
+      background-color: #ffe4e1;
+      cursor: default;
+    }
+    .card.matched {
+      box-shadow: 0 0 15px #ff69b4;
+      transform: scale(1.1);
+    }
+    #message {
+      margin-top: 20px;
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+    .controls {
+      margin-top: 20px;
+    }
+    .controls input {
+      padding: 8px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 2px solid #dda0dd;
+    }
+    .controls button {
+      padding: 8px 16px;
+      font-size: 1rem;
+      margin-left: 10px;
+      border-radius: 8px;
+      background-color: #ffe4e1;
+      border: 2px solid #4b0082;
+      cursor: pointer;
+    }
+    .controls button:hover {
+      background-color: #ffd1dc;
+    }
+    details {
+      margin: 20px auto;
+      max-width: 500px;
+      font-size: 1.1rem;
+      background: #fff0f5;
+      border: 2px dashed #dda0dd;
+      border-radius: 10px;
+      padding: 15px;
+    }
+    summary {
+      font-weight: bold;
+      font-size: 1.3rem;
+      cursor: pointer;
+    }
+    #stats {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎇 Tangled Memory Game</h1>
+
+  <details>
+    <summary>How to Play</summary>
+    <p>
+      Set a move limit and try to match all the Tangled icons before it runs out!<br>
+      Click two cards to flip. Match symbols like 🌸, 🕯️, 🐸. Matched cards glow pink!<br>
+      Click Restart to try again.
+    </p>
+  </details>
+
+  <div class="controls">
+    <label for="moves">Moves allowed:</label>
+    <input type="number" id="moves" min="1" max="50" value="20">
+    <button onclick="startGame()">Start Game</button>
+    <button onclick="location.reload()">Restart</button>
+  </div>
+
+  <div id="stats">⏱ Time: <span id="timer">0</span>s | 💡 Moves Left: <span id="moves-left">20</span> | ⭐ Matches: <span id="match-count">0</span></div>
+
+  <div class="board" id="board"></div>
+
+  <div id="message"></div>
+
+  <script>
+    const symbols = ['🌸', '🕯️', '🐸', '👑', '🎨', '🌿', '🗡️', '🐴'];
+    let cards = [];
+    let board = document.getElementById('board');
+    let firstCard = null;
+    let lockBoard = false;
+    let matches = 0;
+    let movesLeft = 20;
+    let gameStarted = false;
+    let timer = 0;
+    let timerInterval;
+
+    function startGame() {
+      board.innerHTML = '';
+      document.getElementById('message').textContent = '';
+      matches = 0;
+      firstCard = null;
+      lockBoard = false;
+      movesLeft = parseInt(document.getElementById('moves').value);
+      gameStarted = true;
+      timer = 0;
+
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timer++;
+        document.getElementById('timer').textContent = timer;
+      }, 1000);
+
+      document.getElementById('moves-left').textContent = movesLeft;
+      document.getElementById('match-count').textContent = matches;
+
+      cards = [...symbols, ...symbols].sort(() => 0.5 - Math.random());
+
+      cards.forEach(symbol => {
+        const card = document.createElement('div');
+        card.classList.add('card');
+        card.dataset.symbol = symbol;
+        card.addEventListener('click', flipCard);
+        board.appendChild(card);
+      });
+    }
+
+    function flipCard(e) {
+      if (!gameStarted) return;
+
+      const card = e.target;
+      if (lockBoard || card.classList.contains('flipped')) return;
+
+      card.textContent = card.dataset.symbol;
+      card.classList.add('flipped');
+
+      if (!firstCard) {
+        firstCard = card;
+      } else {
+        lockBoard = true;
+        movesLeft--;
+        document.getElementById('moves-left').textContent = movesLeft;
+
+        if (firstCard.dataset.symbol === card.dataset.symbol) {
+          firstCard.classList.add('matched');
+          card.classList.add('matched');
+          matches++;
+          document.getElementById('match-count').textContent = matches;
+
+          if (matches === symbols.length) {
+            document.getElementById('message').textContent = '🎉 You matched all the pairs!';
+            clearInterval(timerInterval);
+            gameStarted = false;
+          }
+
+          resetTurn();
+        } else {
+          setTimeout(() => {
+            firstCard.textContent = '';
+            card.textContent = '';
+            firstCard.classList.remove('flipped');
+            card.classList.remove('flipped');
+            resetTurn();
+          }, 1000);
+        }
+
+        if (movesLeft <= 0 && matches < symbols.length) {
+          document.getElementById('message').textContent = '🛑 Out of moves! Try again.';
+          clearInterval(timerInterval);
+          gameStarted = false;
+        }
+      }
+    }
+
+    function resetTurn() {
+      firstCard = null;
+      lockBoard = false;
+    }
+  </script>
+<audio id="bg-music" loop>
+  <source src="tangledsong.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+<button id="music-btn" onclick="startMusic()" style="position: fixed; top: 20px; right: 20px; z-index: 999; background:#fff; border:1px solid #ccc; border-radius:8px; padding:8px 16px; font-family:'Princess Sofia', cursive;">
+  🎵 Play Music
+</button>
+
+<script>
+  function startMusic() {
+    const audio = document.getElementById('bg-music');
+    audio.play().then(() => {
+      document.getElementById('music-btn').innerText = '🎵 Playing';
+    }).catch((e) => {
+      alert("Your browser blocked autoplay. Tap again to start music.");
+    });
+  }
+</script>
+
+</body>
+
+</html>

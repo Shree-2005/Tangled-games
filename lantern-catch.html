@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lantern Catch Game</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+      font-family: 'Arial', sans-serif;
+      color: white;
+    }
+    canvas {
+      display: block;
+    }
+    #scorePanel {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 1.2rem;
+    }
+    #gameOver {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2rem;
+      background: rgba(0,0,0,0.8);
+      padding: 30px 50px;
+      border-radius: 20px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="scorePanel">
+    Lanterns Caught: <span id="score">0</span> |
+    Lives: <span id="lives">10</span>
+  </div>
+  <div id="gameOver">💀 Game Over! Restarting...</div>
+  <canvas id="gameCanvas"></canvas>
+  <audio id="catchSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_a849e197ab.mp3?filename=click-124467.mp3"></audio>
+
+  <audio id="bg-music" loop>
+    <source src="tangledsong.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <button id="music-btn" onclick="startMusic()" style="position: fixed; top: 20px; right: 20px; z-index: 999; background:#fff; border:1px solid #ccc; border-radius:8px; padding:8px 16px; font-family:'Princess Sofia', cursive;">
+    🎵 Play Music
+  </button>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const lanternImg = new Image();
+    lanternImg.src = "lantern.jpeg";
+
+    const lanterns = [];
+    let score = 0;
+    let lives = 10;
+    let gameRunning = true;
+
+    class Lantern {
+      constructor() {
+        this.x = Math.random() * (canvas.width - 80);
+        this.y = canvas.height + 60;
+        this.size = 80 + Math.random() * 20;
+        this.speed = 0.8 + Math.random() * 1.2;
+        this.glow = false;
+        this.opacity = 1;
+      }
+      draw() {
+        if (this.glow) {
+          ctx.save();
+          ctx.shadowColor = '#fff6a9';
+          ctx.shadowBlur = 25;
+        }
+        ctx.globalAlpha = this.opacity;
+        ctx.drawImage(lanternImg, this.x, this.y, this.size, this.size);
+        ctx.restore();
+        ctx.globalAlpha = 1;
+      }
+      update() {
+        this.y -= this.speed;
+        if (this.glow) this.opacity -= 0.05;
+      }
+    }
+
+    function addLantern() {
+      if (gameRunning) {
+        lanterns.push(new Lantern());
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = lanterns.length - 1; i >= 0; i--) {
+        lanterns[i].update();
+        lanterns[i].draw();
+        if (lanterns[i].opacity <= 0) {
+          lanterns.splice(i, 1);
+        } else if (lanterns[i].y + lanterns[i].size < 0 && !lanterns[i].glow) {
+          // Missed lantern
+          lanterns.splice(i, 1);
+          lives--;
+          updateScorePanel();
+          if (lives <= 0) {
+            gameOver();
+          }
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+
+    function catchLantern(x, y) {
+      for (let i = lanterns.length - 1; i >= 0; i--) {
+        const l = lanterns[i];
+        if (
+          x >= l.x &&
+          x <= l.x + l.size &&
+          y >= l.y &&
+          y <= l.y + l.size
+        ) {
+          l.glow = true;
+          document.getElementById("catchSound").play();
+          score++;
+          updateScorePanel();
+          break;
+        }
+      }
+    }
+
+    function updateScorePanel() {
+      document.getElementById("score").textContent = score;
+      document.getElementById("lives").textContent = lives;
+    }
+
+    function gameOver() {
+      gameRunning = false;
+      document.getElementById("gameOver").style.display = "block";
+      setTimeout(() => {
+        document.getElementById("gameOver").style.display = "none";
+        resetGame();
+      }, 2000);
+    }
+
+    function resetGame() {
+      lanterns.length = 0;
+      score = 0;
+      lives = 10;
+      gameRunning = true;
+      updateScorePanel();
+    }
+
+    canvas.addEventListener("click", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      catchLantern(x, y);
+    });
+
+    setInterval(addLantern, 1000);
+    animate();
+
+    function startMusic() {
+      const audio = document.getElementById('bg-music');
+      audio.play().then(() => {
+        document.getElementById('music-btn').innerText = '🎵 Playing';
+      }).catch((e) => {
+        alert("Your browser blocked autoplay. Tap again to start music.");
+      });
+    }
+  </script>
+</body>
+</html>

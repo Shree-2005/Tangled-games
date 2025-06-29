@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tangled Quote Quiz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(#fff1f9, #e0f7fa);
+      font-family: 'Princess Sofia', cursive;
+      text-align: center;
+      padding: 20px;
+      color: #4b0082;
+    }
+    h1 {
+      font-size: 2.5rem;
+    }
+    .quote-box {
+      background: #fff8fc;
+      border: 2px dashed #dda0dd;
+      padding: 20px;
+      margin: 30px auto;
+      border-radius: 15px;
+      width: 80%;
+      max-width: 600px;
+    }
+    .quote {
+      font-size: 1.4rem;
+      margin-bottom: 10px;
+    }
+    .quote.hindi {
+      font-size: 1.2rem;
+      color: #5c007a;
+      margin-top: 5px;
+    }
+    button.option {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border: 2px solid #4b0082;
+      background-color: #ffe4e1;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    button.option:hover {
+      background-color: #ffd1dc;
+    }
+    #feedback {
+      font-size: 1.2rem;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    #score {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    details {
+      margin: 20px auto;
+      width: 80%;
+      max-width: 600px;
+      font-size: 1.1rem;
+      background: #f8e7f3;
+      border: 2px dashed #dda0dd;
+      border-radius: 10px;
+      padding: 10px 15px;
+    }
+    summary {
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>📜 Tangled Quote Quiz</h1>
+
+  <details>
+    <summary>How to Play</summary>
+    <p>
+      You'll see a quote from Tangled (both English & Hindi).<br>
+      Choose the character who said it! Each correct answer gives you 1 point.
+    </p>
+  </details>
+
+  <div class="quote-box">
+    <div class="quote" id="quote"></div>
+    <div class="quote hindi" id="quote-hindi"></div>
+  </div>
+
+  <div id="options"></div>
+
+  <div id="feedback"></div>
+  <div id="score">Score: 0</div>
+
+  <script>
+    const questions = [
+      {
+        quote: "You were my new dream.",
+        hindi: "तुम मेरी नयी ख्वाहिश बन गई थी।",
+        options: ["Flynn", "Rapunzel", "Gothel", "Maximus"],
+        answer: "Flynn"
+      },
+      {
+        quote: "Mother knows best.",
+        hindi: "माँ सबसे बेहतर जानती है।",
+        options: ["Gothel", "Rapunzel", "Flynn", "Pascal"],
+        answer: "Gothel"
+      },
+      {
+        quote: "I have magic hair that glows when I sing!",
+        hindi: "मेरे बाल जादुई हैं, जो गाने पर चमकते हैं!",
+        options: ["Rapunzel", "Flynn", "Pascal", "Gothel"],
+        answer: "Rapunzel"
+      },
+      {
+        quote: "That's the funny thing about birthdays, they're kind of an annual thing.",
+        hindi: "जन्मदिन की बात ही अजीब है, हर साल आते हैं।",
+        options: ["Flynn", "Gothel", "Pascal", "Rapunzel"],
+        answer: "Flynn"
+      },
+      {
+        quote: "Great, now I’m the bad guy.",
+        hindi: "वाह! अब मैं ही विलेन बन गया हूँ।",
+        options: ["Flynn", "Maximus", "Gothel", "Rapunzel"],
+        answer: "Flynn"
+      },
+      {
+        quote: "I want to see the floating lights.",
+        hindi: "मैं उन तैरते हुए प्रकाशों को देखना चाहती हूँ।",
+        options: ["Rapunzel", "Flynn", "Gothel", "Pascal"],
+        answer: "Rapunzel"
+      },
+      {
+        quote: "You want me to be the bad guy? Fine. Now I'm the bad guy.",
+        hindi: "तुम चाहती हो मैं बुरा बन जाऊँ? ठीक है, अब मैं बुरा ही सही।",
+        options: ["Gothel", "Flynn", "Rapunzel", "Maximus"],
+        answer: "Gothel"
+      },
+      {
+        quote: "They just can't get my nose right!",
+        hindi: "कोई मेरी नाक सही क्यों नहीं बना सकता!",
+        options: ["Flynn", "Rapunzel", "Guard", "Pascal"],
+        answer: "Flynn"
+      },
+      {
+        quote: "No, I won't stop. For every minute of the rest of my life, I will fight.",
+        hindi: "नहीं, मैं नहीं रुकूंगी। अपनी ज़िंदगी के हर पल के लिए मैं लड़ूंगी।",
+        options: ["Rapunzel", "Gothel", "Flynn", "Maximus"],
+        answer: "Rapunzel"
+      },
+      {
+        quote: "Look at those fireworks. They're for you!",
+        hindi: "वो आतिशबाज़ियाँ देखो, वो तुम्हारे लिए हैं!",
+        options: ["Flynn", "Maximus", "Pascal", "Gothel"],
+        answer: "Flynn"
+      }
+    ];
+
+    let current = 0;
+    let score = 0;
+
+    function loadQuestion() {
+      const q = questions[current];
+      document.getElementById('quote').textContent = '“' + q.quote + '”';
+      document.getElementById('quote-hindi').textContent = '“' + q.hindi + '”';
+      const optionsDiv = document.getElementById('options');
+      optionsDiv.innerHTML = '';
+
+      q.options.forEach(option => {
+        const btn = document.createElement('button');
+        btn.textContent = option;
+        btn.className = 'option';
+        btn.onclick = () => checkAnswer(option);
+        optionsDiv.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(selected) {
+      const q = questions[current];
+      const feedback = document.getElementById('feedback');
+
+      if (selected === q.answer) {
+        score++;
+        feedback.textContent = '✅ Correct!';
+      } else {
+        feedback.textContent = `❌ Oops! It was ${q.answer}.`;
+      }
+
+      document.getElementById('score').textContent = 'Score: ' + score;
+
+      current++;
+      if (current < questions.length) {
+        setTimeout(() => {
+          feedback.textContent = '';
+          loadQuestion();
+        }, 1500);
+      } else {
+        setTimeout(() => {
+          feedback.textContent = '🎉 Quiz Over! Final Score: ' + score + '/' + questions.length;
+          document.getElementById('options').innerHTML = '';
+        }, 1500);
+      }
+    }
+
+    loadQuestion();
+  </script>
+<audio id="bg-music" autoplay loop>
+  <source src="tangledsong.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+<audio id="bg-music" loop>
+  <source src="tangledsong.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+<button id="music-btn" onclick="startMusic()" style="position: fixed; top: 20px; right: 20px; z-index: 999; background:#fff; border:1px solid #ccc; border-radius:8px; padding:8px 16px; font-family:'Princess Sofia', cursive;">
+  🎵 Play Music
+</button>
+
+<script>
+  function startMusic() {
+    const audio = document.getElementById('bg-music');
+    audio.play().then(() => {
+      document.getElementById('music-btn').innerText = '🎵 Playing';
+    }).catch((e) => {
+      alert("Your browser blocked autoplay. Tap again to start music.");
+    });
+  }
+</script>
+
+</body>
+</html>
